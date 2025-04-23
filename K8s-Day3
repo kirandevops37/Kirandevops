@@ -1,0 +1,196 @@
+# Kubernetes Pod - Notes
+
+## What is a Pod?
+- A Pod is the smallest building block or basic unit of scheduling in Kubernetes.
+- A Pod always runs on a Node.
+- In a Kubernetes cluster, a Pod represents a running process.
+- Inside a Pod, you can have one or more containers. Those containers share:
+  - A unique network IP
+  - Storage
+  - Network
+  - Any other specification applied to the Pod
+- A Pod is a group of one or more containers which will be running on some node.
+- Each Pod has its own unique IP Address within the cluster.
+
+---
+
+## Pod Lifecycle
+1. Make a Pod request to the API server using a local Pod definition file.
+2. The API server saves the Pod info in ETCD.
+3. The scheduler finds the unscheduled Pod and schedules it to a node.
+4. The Kubelet on the node sees the scheduled Pod and invokes the container runtime.
+5. The entire lifecycle state of the Pod is stored in ETCD.
+
+---
+
+## Pod Concepts
+- A Pod is **ephemeral**, meaning it lasts for a short time and won’t be rescheduled to a new node once it dies.
+- You should not directly use a Pod for deployment. Kubernetes provides controllers like:
+  - ReplicaSets
+  - Deployments
+  - DaemonSets
+  to manage Pods and ensure availability.
+
+### Pod Models:
+
+#### One-container-per-Pod
+- Most common model.
+- The Pod acts as a "wrapper" for a single container.
+- Kubernetes manages Pods, not individual containers.
+
+#### Multi-container Pod (Sidecar containers)
+- A Pod can contain multiple co-located containers:
+  - **Primary container** (main app)
+  - **Utility container** (enhances/monitors app)
+- Examples of sidecar containers: log shippers/watchers, monitoring agents
+
+---
+
+## Kubernetes Resource Listing
+
+### List all K8s objects:
+kubectl api-resources
+
+### List namespace-level objects:
+
+kubectl api-resources --namespaced=true
+
+### List cluster-level objects:
+kubectl api-resources --namespaced=false
+
+
+
+## Pod Syntax
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: <pod name>
+  labels:
+    <key>: <value>
+  namespace: <nsName>
+spec:
+  containers:
+    - name: <containerName>
+      image: <registry/repo:tag>
+      ports:
+        - containerPort: <containerPort>
+      env:
+        - name: <NAME>
+          value: <value>
+
+### Save: `app1.yaml`
+kubectl apply -f app1.yaml
+```
+
+---
+
+## Examples
+
+### Example 1 - NGINX
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  namespace: test-ns
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.14.2
+      ports:
+        - containerPort: 80
+
+### Example 2 - Java Web App
+apiVersion: v1
+kind: Pod
+metadata:
+  name: javawebappTest
+  labels:
+    app: javawebappTest
+  namespace: test-ns
+spec:
+  containers:
+    - name: javawebapp1
+      image: kkeducation123456/maven-web-app:1.2
+      ports:
+        - containerPort: 8080
+
+### Example 3 - MongoDB
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mogodbpod
+  namespace: db-ns
+spec:
+  containers:
+    - name: mongodbcontainer
+      image: mongo
+      ports:
+        - containerPort: 27017
+
+## Useful Commands
+
+### Describe a Pod
+kubectl describe po <podName> -n <NameSpace>
+
+
+### Sanity Check Before Starting a Pod
+kubectl apply -f abc.yaml -v=8
+
+### Check Which Worker Node Pod is Running On
+kubectl get po -o wide
+
+### Pod Status Values
+- `1/1`: 1 container inside the Pod, and it is running.
+- `0/1`: 1 container inside the Pod, and it is NOT running.
+- `2/2`: 2 containers in the Pod, and both are running.
+- `1/2`: 2 containers, but only 1 is running.
+
+---
+
+## Assignment - Pod Creation
+
+### Tomcat
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcatpod
+  namespace: app-ns
+spec:
+  containers:
+    - name: tomcat-container
+      image: tomcat:9.0
+      ports:
+        - containerPort: 8080
+```
+
+### Jenkins
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jenkinspod
+  namespace: cicd-ns
+spec:
+  containers:
+    - name: jenkins-container
+      image: jenkins/jenkins:lts
+      ports:
+        - containerPort: 8080
+```
+
+### MongoDB
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mongopod
+  namespace: db-ns
+spec:
+  containers:
+    - name: mongo-container
+      image: mongo
+      ports:
+        - containerPort: 27017
+```
+
